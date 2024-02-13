@@ -1,0 +1,331 @@
+---
+title: "Structural equation occupancy simulation"
+subtitle: "From: Can marmots and pika take the heat? Structural equation occupancy models shed light on species persistence."
+author: "J. Wall"
+date: "Last Updated: Feb. 13, 2024"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, cache = T)
+knitr::opts_knit$set(root.dir = "C:/Users/jwall/Documents/UMT_2019-2021/PhD_Denali_Alpine_Wildlife/Chapter1_SpatiotemporalWildlifeOccupancy")
+```
+
+### Background
+
+This simulation is part of a larger project examining the impacts of global climate disruption on alpine wildlife in Alaska, specifically collared pika (*Ochotona collaris*), hoary marmots (*Marmota caligata*), and Arctic ground squirrels (*Urocitellus parryii*).
+
+Here, we are simulating a Bayesian causal structural equation occupancy model, which uses multiple equations to represent relationships between observed and latent variables while simultaneously accounting for imperfect detection of species, which can bias results. For each model, we treat occurrence as a binary latent variable, Z, such that Z = 1 if a site, i, is occupied and Z = 0 if the site is unoccupied. We then calculate Z  with a Bernoulli distribution of the probability of occurrence, $\psi$. We accounted for imperfect detection by modeling our site occurrence data, y, as a function of both Z and the probability of detection, p. As an alternative to repeated site visits for the occupancy model, we are instead calculating detection probabilities using 3-4 different sign types from our focal species. We consider a site occupied if only one of the sign types was detected in an area.
+
+We have based this example off our 2022 data on collared pika, which encompasses 86 different site surveys with four different types of detection: individual sightings, vocalizations, scat, and haypiles.
+
+### Setting up the data
+
+First, let's import all necessary libraries. If you don't have any of these, you will need to first install the packages, as follows:
+
+```{r, eval=FALSE}
+install.packages("package name here")
+```
+
+Once all packages are installed, you can load them into your current session.
+
+```{r, warning=FALSE, message=FALSE, error=FALSE}
+# Import libraries
+library(jagsUI)      # interfaces with JAGS
+library(mcmcOutput)  # interprets results
+library(tidyverse)   # streamlines data transformations, organization, and manipulation.
+library(sf)          # operates on vectors (spatial data)
+library(terra)       # operates on rasters (spatial data)
+library('ggeffects') # 
+```
+
+Next, we need to set up the simulated data. In this model, J is the number of sites and K is the different types of detections at each site (or site visits). This leaves us with the following variables:
+
+  * Z: binary site occupancy -> z = 1 if occupied, z = 0 if unoccupied
+  * i: site identification
+  * $\psi$: probability of occurrence with a Bernoulli distribution, such that $Z[i] \sim dbern(psi[i])$
+  * y: matrix of site occurrence data (this is the data you collected)
+  * p: probability of detection
+  * J: number of total sites surveyed
+  * K: types of detections at each site (i.e. individual sightings, scat)
+  
+We can first identify the number of sites and the number of detection types.
+
+```{r}
+J <- 86 # number of sites
+K <- 4  # detection types or visits
+```
+
+We can then simulate covariate data for our model. For this example, we are simulating the following path equations:
+
+\begin{align*}
+temp_{i} &\sim a_{1}terrain_{i} \\
+ros_{i} &\sim a_{2}terrain_{i} \\
+evi_{i} &\sim a_{3}terrain_{i} + a_{4}temp_{i}\\
+\psi &\sim \gamma_{0} + \gamma_{1}temp_{i} + \gamma_{2}ros_{i} + \gamma_{3}evi_{i}
+\end{align*}
+
+Where $temp$ represents a measure of temperature, $terrain$ represents a measure of terrain (i.e. elevation, slope, terrain ruggedness), $ros$ represents the number of rain on snow events, $evi$ represents a measure of summer greenness, $\psi$ is the probability of occurrence, and $a$ and $\gamma$ represent relationship coefficients. 
+
+#### Generate covariates and coefficients
+
+To generate covariate values for each site, J, we first create an empty data frame, J_covars, with all of the covariate names.
+
+```{r}
+# Create an empty data frame with all of the covariates
+J_covars <- data.frame(terrain = rep(NA, J), temp = rep(NA, J), ros = rep(NA, J), evi = rep(NA, J))
+```
+
+We can then go through and fill in the data frame with randomly generated distributions for each variable, keeping in mind their relationships (see path equations).
+
+```{r}
+# Randomly generate a normal distribution with mean = 0, sd = 1 for terrain
+J_covars$terrain <- rnorm(J, 0, 1)
+
+# Model temperature and rain on snow as a function of terrain 
+J_covars$temp <- -1*J_covars$terrain + rnorm(J, 0, 1)
+J_covars$ros <- -1*J_covars$terrain + rnorm(J, 0, 1)
+
+# Model evi as a function of both terrain and temperature
+J_covars$evi <- J_covars$terrain + J_covars$temp + rnorm(J, 0, 1)
+```
+
+Which will look like the following.
+
+```{r, echo=FALSE, figures-side, fig.show="hold", out.width="33%"}
+# Look at plots
+plot(J_covars$temp ~ J_covars$terrain)
+plot(J_covars$ros ~ J_covars$terrain)
+plot(J_covars$evi ~ J_covars$temp)
+```
+
+To generate our occurrence probabilities, $\psi$, we use the covariate values above combined with coefficient values for occupancy ($\gamma$).
+
+```{r}
+# Specify coefficient values representing the actual relationships (can use to check accuracy later)
+occ_int <- qlogis(0.25) # mean expected occupancy at each site
+occ_gamma1 <- -1        # occ dec w/ higher temp 
+occ_gamma2 <- -2        # occ dec w/ higher ros
+occ_gamma3 <- 1.5       # occ inc w/ higher evi
+
+# Randomly generate occurrence probabilities using plogis (distribution function)
+psi <- plogis(occ_int + occ_gamma1 * J_covars$temp + 
+                occ_gamma2 * J_covars$ros + occ_gamma3 * J_covars$evi)
+```
+
+Which will look like the following:
+
+```{r, echo=FALSE, fig.show="hold", out.width="50%"}
+# Visualize each of the simulated relationships
+plot(psi ~ J_covars$terrain)
+plot(psi ~ J_covars$temp)
+plot(psi ~ J_covars$ros)
+plot(psi ~ J_covars$evi)
+```
+
+And we can specify detection probabilities for each type of detection.
+
+```{r}
+# Specify the detection probabilities for each type of detection
+det_int <- as.vector(NA) # creates an empty vector
+det_int[1] <- 0.3        # detection type: scat
+det_int[2] <- 0.1        # detection type: haypiles
+det_int[3] <- 0.4        # detection type: vocalizations
+det_int[4] <- 0.01       # detection type: individual sightings
+```
+
+#### Simulate our data
+
+Once we have generate covariates and coefficients for our data, we can use them to generate data to feed into our model. Here, we are creating a matrix of detections and simulating detection histories for our four types of detections given the true occupancy state for each site.
+
+```{r}
+# Create a matrix of detections 
+p <- matrix(NA, nrow = J, ncol = K) # site occupancy
+for(j in 1:K){
+  p[, j] <- det_int[j]
+}
+
+# Simulate detection histories
+Z <- vector()
+for(i in 1:J){
+  Z[i] <- rbinom(1, 1, psi[i]) # true occupancy state for each site
+}
+y <- matrix(NA, nrow = J, ncol = K) # empty matrix for simulated detections
+for(i in 1:J){
+  for(j in 1:K){
+    y[i, j] <- Z[i]*rbinom(1,1,p[i, j])
+  }
+}
+```
+
+If we look at a snapshot of the detection history, it shows a matrix of 1's and 0's for each site and each type of detection. This is our simulated data.
+
+```{r, echo = FALSE}
+head(y)
+```
+
+And, as the last step before writing our model, we can define our prior distributions. Here, we show some example prior distributions. 
+
+```{r, eval=FALSE}
+res <- 100
+x <- seq(-3,3, length.out = res)
+n <- 1000
+
+beta0 <- rlogis(n, 0, 1)         # create a uniform distribution
+beta1 <- rnorm(n, -0.25, 0.15)   # distribution centered around 0.43
+
+# View an example histogram of the distribution before and after logit transformation
+hist(beta0)
+hist(plogis(beta1))
+
+
+# Make an empty matrix
+prior <- matrix(NA, n, res)
+
+# Generate a distribution from -3 to 3
+for (j in 1:res){
+  prior[,j] <- beta0 + beta1 * x[j]
+}
+
+# View example of a weakly informative prior distribution
+boxplot(plogis(prior), names = round(x,digits = 1), outline = F)
+```
+
+### Coding the structural equation occupancy model
+
+Once our data is simulated, we can fit them to our model. As a reminder, our path equations are as follows:
+
+\begin{align*}
+temp_{i} &\sim a_{1}terrain_{i} \\
+ros_{i} &\sim a_{2}terrain_{i} \\
+evi_{i} &\sim a_{3}terrain_{i} + a_{4}temp_{i}\\
+\psi &\sim \gamma_{0} + \gamma_{1}temp_{i} + \gamma_{2}ros_{i} + \gamma_{3}evi_{i}
+\end{align*}
+
+To do this, we sink the model to JAGS with our JAGS interface package, "jagsUI", then define our priors and likelihood equations. For this example, we coded the following structural equation occupancy model. 
+
+*Note, the occupancy model is hierarchically nested within the likelihood equations as separate occupancy and detection models. Within our detection model, we listed our detection types, $b0$, as a vector with 4 different prior distributions (all uniform in this case).
+
+```{r, eval = F}
+# Structural equation occupancy model
+sink("SEMOcc_Simulation.jags")
+cat("
+
+model{
+  # Priors
+  a1 ~ dnorm(-0.25,0.15)  # temp ~ a1*terrain
+  a2 ~ dlogis(0,1)        # ros ~ a2*terrain
+  a3 ~ dlogis(0,1)        # evi ~ a3*terrain + a4*temp
+  a4 ~ dlogis(0,1)        # evi ~ a3*terrain + a4*temp
+
+  b0[1] ~ dlogis(0,1)     # scat
+  b0[2] ~ dlogis(0,1)     # hapyiles
+  b0[3] ~ dlogis(0,1)     # vocalizations
+  b0[4] ~ dlogis(0,1)     # individual sightings
+
+  g0 ~ dlogis(0,1)        # psi ~ intercept
+  g1 ~ dnorm(0.3, 0.5)    # psi ~ temp
+  g2 ~ dnorm(0.25,0.15)   # psi ~ ros
+  g3 ~ dnorm(0.25,0.15)   # psi ~ evi 
+
+  for (k in 1:3){
+    sigma[k] ~ dgamma(1,1)
+    tau[k] = 1/(sigma[k] * sigma[k])
+  }
+  
+  for (j in 1:4){
+    # p[j] ~ dbeta(1,1)
+    logit(p[j]) = b0[j]
+  }
+  
+  # Likelihood
+  for(i in 1:J){
+  
+    # model for temperature given terrain (no intercept bc covariates 0 centered)
+    temp[i] ~ dnorm(a1*terrain[i], tau[1])
+    
+    # model for rain on snow given terrain
+    ros[i] ~ dnorm(a2*terrain[i], tau[2])
+    
+    # model for evi given terrain and temperature
+    evi[i] ~ dnorm(a3*terrain[i] + a4*temp[i], tau[3])
+  
+    # model for occupancy given temperature, rain on snow, and EVI
+    Z[i] ~ dbern(psi[i]) # Z = 1 if true state occupied
+    logit(psi[i]) <- g0 + g1*temp[i] + g2*ros[i] + g3*evi[i]
+    
+    # model for detection
+    for(j in 1:K){
+      y[i,j] ~ dbern(Z[i]*p[j])
+      # logit(p[i,j]) <- b0[j] # detection equation
+    }
+  }
+  
+  # Derived variable
+  N <- sum(Z)
+}
+",fill = TRUE)
+sink()
+```
+
+Once the model is written, we can specify our initial values and run the model with our simulated data, as follows.
+
+```{r, eval = F}
+# Organize the simulated data
+jags_data = list(J = J, K = K, y = y, Z = ifelse(rowSums(y) > 0, 1, NA),
+                 terrain = J_covars$terrain, temp = J_covars$temp,
+                 ros = J_covars$ros, evi = J_covars$evi)
+
+params = c('a1', 'a2', 'a3', 'a4', 'g0', 'g1', 'g2', 'g3', 'N', 'Z', 'p') # parameters to save from model
+
+inits <- function() {   # specify initial values
+  a1 <- rnorm(1, 0, .5)
+  a2 <- rnorm(1, 0, .5)
+  a3 <- rnorm(1, 0, .5)
+  a4 <- rnorm(1, 0, .5)
+  b0 <- rnorm(4, 0, .5)
+  
+  return(list(a1 = a1, a2 = a2, a3 = a3, a4 = a4,
+              b01 = b0[1], b02 = b0[2], b03 = b0[3], b04 = b0[4]))
+} 
+
+# Run the model
+occ_sim <- jagsUI::jags(data = jags_data, 
+                        inits=inits,
+                        model.file = "SEMOcc_Simulation.jags",
+                        parameters.to.save = params,
+                        n.chains = 25,              # chains to run
+                        n.iter = 15000,             # iterations including burn in
+                        n.thin = 10,                # thinning rate
+                        parallel = T)
+```
+
+```{r, echo = F, eval = F}
+save(occ_sim, file = "C:/Users/jwall/Documents/UMT_2019-2021/PhD_Denali_Alpine_Wildlife/Chapter1_SpatiotemporalWildlifeOccupancy/4.Output/occ_sim_ex.Rdata")
+```
+
+And we can look at the results and diagnostic plots.
+
+```{r, echo = F}
+load("4.Output/occ_sim_ex.Rdata")
+```
+
+```{r, fig.show="hold", out.width="33%"}
+summary(occ_sim) # summary of model
+
+# View diagnostic plots for a, gamma, and p
+for(i in 1:9){
+  mcmcOutput::diagPlot(occ_sim$sims.list[[i]]) # view diagnostic plots
+}
+```
+
+```{r, fig.show="hold"}
+mcmcOutput::diagPlot(occ_sim$sims.list$p)      # view diagnostic plots for p
+```
+
+And the full printed summary of the model, which we can use to compare to our original inputs.
+
+```{r}
+print(occ_sim)
+```
+
