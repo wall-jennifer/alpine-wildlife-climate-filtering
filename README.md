@@ -5,7 +5,7 @@
 TBD. 
 
 ## Code
-  1. [0.1_prior-estimation.r](0.1_prior-estimation.r) Prior development and estimation.
+  1. [code/0.1_prior-estimation.r](0.1_prior-estimation.r) Prior development and estimation.
   2. [Link to data]: Code for the simulation I ran of the various GLMs.
   3. [Link to data]: Simulated structural equation / occupancy model
   4. Collared pika *(Ochotona collaris)* models:
