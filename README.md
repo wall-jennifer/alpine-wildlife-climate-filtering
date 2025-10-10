@@ -7,7 +7,7 @@ TBD.
 ## Code
   1. [0.1_prior-estimation.R](/code/0.1_prior-estimation.R) Prior development and visualization of weakly informative priors.
   2. [Link to data]: Code for the simulation I ran of the various GLMs.
-  3. [Link to data]: Simulated structural equation / occupancy model
+  3. [Link to data]: Simulated Bayesian causal structural equation / occupancy model. This model uses multiple equations to represent relationships between observed and latent variables while simultaneously accounting for imperfect detection of species and calculates detection probabilities using 3-4 different sign types from our focal species as an alternative to repeated site visits.
   4. Collared pika *(Ochotona collaris)* models:
      
       - 1.1_COPI_climate-drivers-SEM-occupancy: Hierarchical occupancy model nested within a structural equation model with latent and observed variables.
