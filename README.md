@@ -1,4 +1,4 @@
-# Pika and marmot occupancy paper title (Previously: Can marmots and pika take the heat?)
+# Can marmots and pikas take the heat? Scale-dependent variation in the vulnerability of alpine wildlife to climate changes.
 ### Jennifer L. Wall and Jedediah F. Brodie
 
 ## Abstract
