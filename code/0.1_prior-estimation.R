@@ -1,4 +1,5 @@
 # Prior development and estimation
+### adapted from code by: Dr. Thomas Reicke, University of Montana
 
 # Simulate priors 
 res <- 100
@@ -23,6 +24,7 @@ for (j in 1:res){
 boxplot(plogis(p), names = round(x,digits = 1), outline = F)
 # as you can see by the boxplot, this distribution would result in a prior with a negative
 # slope that allows for all possible values, but is more concentrated between 0.3 and 0.7
+
 
 
 
