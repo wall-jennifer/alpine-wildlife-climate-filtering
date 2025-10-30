@@ -34,8 +34,3 @@ TBD.
 - **snow.depth**: Maximum snow depth (m), as calculated from the 10 year average SnowModel data between September of the previous year to April.
 - **perm**: Continuous probability (%) of near-surface permafrost, based on models by Pastick 4326.
 - **evi**: Average summer greenness from the previous summer, as measured via the enhanced vegetation index and calculated from MOD13Q1 v061 16-day EVI between June – August.
-
-## Data
-
-  1. Variables --
-  2. 
