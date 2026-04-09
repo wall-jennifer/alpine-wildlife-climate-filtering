@@ -1,4 +1,4 @@
-# COPI_climate-drivers-SEM-occupancy
+# COPI_climate-drivers-SEM-occupancy-simplified
 
 
 ### Hierarchical occupancy model nested within a structural equation model with latent and observed variables
@@ -141,13 +141,8 @@ print(COPI_testocc_simplified)
 pp.check(COPI_testocc_simplified, observed = 'D.obs', simulated = 'D.rep')
 
 # save the model output as R data
-save(COPI_testocc_simplified, file = "4.Output/COPI_testocc_climatesimplified.Rdata")
+#save(COPI_testocc_simplified, file = "path-here.Rdata")
 
 # also save the dataframe of summary stats
-write.csv(COPI_testocc_clim$summary, "4.Output/COPI_testocc_climatesimplified_summary.csv")
-
-abc <- load("~/UMT_2019-2021/PhD_Denali_Alpine_Wildlife/Chapter1_SpatiotemporalWildlifeOccupancy/ECY25-1309_Re-resubmission Materials/COPI_testocc_climatesimplified.Rdata")
-def <- read.csv("~/UMT_2019-2021/PhD_Denali_Alpine_Wildlife/Chapter1_SpatiotemporalWildlifeOccupancy/ECY25-1309_Re-resubmission Materials/COPI_testocc_climatesimplified_summary.csv")
-loo(COPI_testocc_clim)
-COPI_testocc_clim
+#write.csv(COPI_testocc_clim$summary, "path-here.csv")
 
