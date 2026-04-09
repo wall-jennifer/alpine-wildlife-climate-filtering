@@ -153,7 +153,7 @@ print(HOMA_testocc_clim)
 pp.check(HOMA_testocc_clim, observed = 'D.obs', simulated = 'D.rep')
 
 # save the model output as R data
-save(HOMA_testocc_clim, file = "~/UMT_2019-2021/PhD_Denali_Alpine_Wildlife/Chapter1_SpatiotemporalWildlifeOccupancy/ECY25-1309_Re-resubmission Materials/HOMA_SEMocc_clim.Rdata")
+#save(HOMA_testocc_clim, file = "path-here.Rdata")
 
 # also save the dataframe of summary stats
-write.csv(HOMA_testocc_clim$summary, "~/UMT_2019-2021/PhD_Denali_Alpine_Wildlife/Chapter1_SpatiotemporalWildlifeOccupancy/ECY25-1309_Re-resubmission Materials/HOMA_SEMocc_clim_summary.csv")
+#write.csv(HOMA_testocc_clim$summary, "path-here.csv")
