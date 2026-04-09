@@ -133,7 +133,7 @@ print(COPI_testocc_sim)
 pp.check(COPI_testocc_sim, observed = 'D.obs', simulated = 'D.rep')
 
 # save the model output as R data
-save(COPI_testocc_sim, file = "~/UMT_2019-2021/PhD_Denali_Alpine_Wildlife/Chapter1_SpatiotemporalWildlifeOccupancy/ECY25-1309_Re-resubmission Materials/COPI_occ_sim.Rdata")
+#save(COPI_testocc_sim, file = "path-here.Rdata")
 
 # also save the dataframe of summary stats
-write.csv(COPI_testocc_sim$summary, "~/UMT_2019-2021/PhD_Denali_Alpine_Wildlife/Chapter1_SpatiotemporalWildlifeOccupancy/ECY25-1309_Re-resubmission Materials/COPI_occ_sim_summary.csv")
+#write.csv(COPI_testocc_sim$summary, "path-here.csv")
