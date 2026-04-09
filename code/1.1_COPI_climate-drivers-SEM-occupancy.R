@@ -158,7 +158,7 @@ print(COPI_testocc_clim)
 pp.check(COPI_testocc_clim, observed = 'D.obs', simulated = 'D.rep')
 
 # save the model output as R data
-#save(COPI_testocc_clim, file = "~/UMT_2019-2021/PhD_Denali_Alpine_Wildlife/Chapter1_SpatiotemporalWildlifeOccupancy/ECY25-1309_Re-resubmission Materials/COPI_SEMocc_clim.Rdata")
+#save(COPI_testocc_clim, file = "path-here")
 
 # also save the dataframe of summary stats
-#write.csv(COPI_testocc_clim$summary, "~/UMT_2019-2021/PhD_Denali_Alpine_Wildlife/Chapter1_SpatiotemporalWildlifeOccupancy/ECY25-1309_Re-resubmission Materials/COPI_SEMocc_clim_summary.csv")
+#write.csv(COPI_testocc_clim$summary, "path-here")
