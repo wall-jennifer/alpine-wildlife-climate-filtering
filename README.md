@@ -10,7 +10,7 @@ TBD.
   3. [0.3_SEM-occupancy-simulation.Rmd](/code/0.3_SEM-occupancy-simulation.Rmd): Simulated Bayesian causal structural equation / occupancy model. This model uses multiple equations to represent relationships between observed and latent variables while simultaneously accounting for imperfect detection of species and calculates detection probabilities using 3-4 different sign types from our focal species as an alternative to repeated site visits.
   4. Collared pika *(Ochotona collaris)* models:
      
-      - 1.1_COPI_climate-drivers-SEM-occupancy: Hierarchical occupancy model nested within a structural equation model with latent and observed variables.
+      - [1.1_COPI_climate-drivers-SEM-occupancy](code/1.1_COPI_climate-drivers-SEM-occupancy.R): Hierarchical occupancy model nested within a structural equation model with latent and observed variables.
       - 1.2_COPI_climate-filtering-occupancy: Hierarchical single-species, single-season occupancy model of local, microclimate factors, including: average rock diameter and vegetation scores, based on ...
       - 1.3_COPI_climate-drivers-SEM-occupancy-simplified:
       - 1.4_COPI_climate-drivers-SEM-Occupancy-cooccurrence"
