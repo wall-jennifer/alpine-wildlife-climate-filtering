@@ -11,7 +11,7 @@ TBD.
   4. Collared pika *(Ochotona collaris)* models:
      
       - [1.1_COPI_climate-drivers-SEM-occupancy](code/1.1_COPI_climate-drivers-SEM-occupancy.R): Hierarchical occupancy model nested within a structural equation model with latent and observed variables.
-      - 1.2_COPI_climate-filtering-occupancy: Hierarchical single-species, single-season occupancy model of local, microclimate factors.
+      - [1.2_COPI_climate-filtering-occupancy](code/1.2_COPI_climate-filtering-occupancy.R): Hierarchical single-species, single-season occupancy model of local, microclimate factors.
       - [1.3_COPI_climate-drivers-SEM-occupancy-simplified](code/1.3_COPI_climate-drivers-SEM-occupancy-simplified.R): Hierarchical occupancy model nested within a structural equation model with latent and observed variables.
       - 1.4_COPI_climate-drivers-SEM-Occupancy-cooccurrence
     
