@@ -17,8 +17,8 @@ TBD.
   5. Hoary marmot *(Marmota caligata)* models: 
      
       - [2.1_HOMA_climate-drivers-SEM-occupancy](code/2.1_HOMA_climate-drivers-SEM-occupancy.R): Hierarchical occupancy model nested within a structural equation model with latent and observed variables.
-      - [2.2_HOMA_climate-filtering-occupancy](code/2.2_HOMA_climate-filtering-occupancy.R): Hierarchical single-species, single-season occupancy model of local, microclimate factors, including: average rock diameter and vegetation scores, based on ...
-      - 2.3_HOMA_climate-drivers-SEM-occupancy-simplified:
+      - [2.2_HOMA_climate-filtering-occupancy](code/2.2_HOMA_climate-filtering-occupancy.R): Hierarchical single-species, single-season occupancy model of local, microclimate factors.
+      - [2.3_HOMA_climate-drivers-SEM-occupancy-simplified](code/2.3_HOMA_climate-drivers-SEM-occupancy-simplified.R)
     
 ## Variables
 
